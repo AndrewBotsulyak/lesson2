@@ -1,0 +1,486 @@
+# lesson2
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Security;
+
+namespace Labirint
+{
+    class Program
+    {
+      
+
+        static void Main(string[] args)
+        {
+           //  Console.OutputEncoding = UTF8Encoding.UTF32;
+            Map a = new Map();
+           // Map b = new Map();
+            //a.Print();
+          //  Random a = new Random();
+           // Console.WriteLine(a.Next(1, 5));
+           // ConsoleKeyInfo a = Console.ReadKey();
+            //if(a.Key == ConsoleKey.DownArrow)
+              //  Console.WriteLine("Yeah baby!");
+        }
+    }
+
+     class Map
+    {
+        int row, col;         
+        private char[,] map;
+        private char block; // cTeHa   
+        private char money;
+        static Random ro;  // rand blocks
+        static Random en;  // rand enemies
+        static Random randmove;
+        private int[] digit;
+        private char player;
+        private ConsoleKeyInfo key;
+        private ENE[] enemy;
+        private int enemycount;
+        private Thread MyThread;
+
+
+        public Map() : this(20,  70)
+        {  
+        }
+
+        public Map(int r, int c)
+        {
+            row = r;
+            col = c;
+            block = Convert.ToChar(0x2592);
+            player = Convert.ToChar(9786);
+            money = Convert.ToChar(36);
+            map = new char[row, col];
+            enemycount = 10;
+            enemy = new ENE[enemycount];
+            digit = new int[enemycount];
+            Enemies();
+            ro = new Random();
+            en = new Random();
+            randmove = new Random();
+            MyThread = new Thread(RRRR);   // Второй поток в программе запуcтит цикл движ. врагов
+            RandDigit();
+            MapRandom();
+            RandEnemy();
+            RandMoney();
+            Move();
+        }
+
+        private void MapRandom()
+        {         
+
+            for(int i = 0; i < row; i++)
+            {
+                for(int j = 0; j < col; j++)
+                {
+                    if(i == 0 || i == row - 1)
+                    { map[i, j] = block; }
+                    if (j == 0 || j == col - 1)
+                        map[i, j] = block;
+                    if(j % 2 == 0 && i % 2 == 0)    // условие на рандомность.
+                        RandBlocks();
+                }
+            }
+            
+            map[1, 1] = player;
+            map[1, 2] = ' ';
+            map[1, 3] = ' ';
+            map[1, 4] = ' ';
+            // свободное пространство для старта + 3 погориз. и + 3 по вертикали
+            map[2, 1] = ' ';
+            map[3, 1] = ' ';
+            map[4, 1] = ' ';
+        }
+
+        private void RandBlocks()  // рандомное положение блоков
+        {
+            int ranR = ro.Next(1, row - 1);
+            int ranC = ro.Next(1, col - 1);
+           // if (map[ranR, ranC] != enemy[0])
+                map[ranR, ranC] = block;
+        }
+
+        public void Print()
+        {
+            Console.ForegroundColor = ConsoleColor.Green; // color of map
+            for (int i = 0; i < row; i++)
+            {
+                for (int j = 0; j < col; j++)
+                {
+                    if (map[i, j] == player && i == 1)
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                    else if(map[i,j] == money)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                    }
+                    else
+                    {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                    }
+                    Console.Write(map[i, j]);
+                }
+                Console.WriteLine();
+            }
+        }
+
+         private void RandMoney()
+        {
+            int ro , co;
+            for (int i = 0; i < 15; i++)
+            {
+
+                ro = en.Next(1, row - 2);
+                co = en.Next(1, col - 2);
+                if (map[ro, co] == block || map[ro, co] == player)
+                {
+                    if (i == 0)
+                        continue;
+                    else
+                    {
+                        i--;
+                        continue;
+                    }
+                }
+                map[ro, co] = money;
+            }
+        }
+
+         private void PrintPlayer(int i, int j) // рисую игрока не перерисовывая весь массив
+        {
+            
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.SetCursorPosition(i, j);
+                //Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write(player);
+                Console.CursorVisible = false;
+        }
+         private void PrintSpace(int i, int j) // рисую пробел при движении игрока
+         {
+             Console.SetCursorPosition(i, j);
+             Console.Write(' ');
+         }
+         private bool OnWall(int i, int j) // проверка на стену.
+        {
+
+                if (i < 0 || j < 0)
+                    return false;
+                if (map[i, j] == block)
+                    return false;
+                else
+                    return true;
+            
+        }
+
+         private bool OnWallEnemy(int i, int j) // проверка на стену для врагов 
+         {
+             
+             if (i < 0 || j < 0)
+                 return false;
+             if (map[i, j] == block)
+                 return false;
+             else
+                 return true;
+         }
+
+         private void OnMoney()
+         {
+             for (int i = 0; i < row; i++)
+             {
+                 for (int j = 0; j < col; j++)
+                 {
+                     if (map[i, j] == player && map[i, j] == money)
+                         map[i, j] = ' ';
+                 }
+             }
+         }
+
+         private void Enemies()  // масив врагов
+         {
+             for(int i =0;i<enemycount;i++)
+             {
+                 //enemy[i] = Convert.ToChar(9787);
+                 enemy[i] = new ENE();
+             }
+         }
+
+         private void RandEnemy()   // случайное положение врагов
+         {
+             int ro , co;
+             for(int i =0;i<enemycount;i++)
+             {
+                 
+                 ro = en.Next(3, row - 2);
+                 co = en.Next(3, col - 2);
+                 if(map[ro,co] == block || map[ro,co] == player )
+                 {
+                     if (i == 0)
+                         continue;
+                     else
+                     {
+                         i--;
+                         continue;
+                     }
+                 }
+                 //map[ro, co] = enemy[i];
+                 enemy[i].a.x = co;
+                 enemy[i].a.y = ro;
+                 Console.SetCursorPosition(co, ro);
+                 Console.ForegroundColor = ConsoleColor.Red;
+                 Console.Write(enemy[i].smile);
+
+             }
+         }
+         private void RandDigit()
+         {
+             for(int i =0; i < 4 ; i++)
+             {
+                 //digit[i] = randmove.Next(1, 5);
+                 enemy[i].ran = randmove.Next(1, 5);
+
+             }
+         }
+
+         private void EnAlgWay(int i , int j ,int num ,int init)  
+         {
+             //Прорисовка движения врагов
+
+            // Thread.Sleep(30);    // делаю паузу текущему потоку
+             
+             if (num == 1)   // RIGHT
+             {
+                // map[i, j] = ' ';
+                 Console.SetCursorPosition(j, i);
+                 Console.Write(' ');
+                 Console.SetCursorPosition(j + 1, i);
+                 Console.ForegroundColor = ConsoleColor.Red;
+                 enemy[init].a.x = j + 1;
+                 
+                 Console.Write(enemy[init].smile);
+                // map[i, j + 1] = enemy[0];
+                 Console.CursorVisible = false;
+             }
+             if (num == 2)    // LEFT
+             {
+                 //map[i, j] = ' ';
+                 Console.SetCursorPosition(j, i);
+                 Console.Write(' ');
+                 Console.SetCursorPosition(j - 1, i);
+                 Console.ForegroundColor = ConsoleColor.Red;
+                 enemy[init].a.x = j - 1;
+
+                 Console.Write(enemy[init].smile);
+                 //Console.Write(enemy[0]);
+              //   map[i, j - 1] = enemy[0];
+                 Console.CursorVisible = false;
+             }
+             if (num == 3)   // UP
+             {
+                // map[i, j] = ' ';
+                 Console.SetCursorPosition(j, i);
+                 Console.Write(' ');
+                 Console.SetCursorPosition(j, i-1);
+                 Console.ForegroundColor = ConsoleColor.Red;
+                 enemy[init].a.y = i - 1;
+
+                 Console.Write(enemy[init].smile);
+                 // Console.Write(enemy[0]);
+                // map[i - 1, j] = enemy[0];
+                 Console.CursorVisible = false;
+             }
+             if (num == 4)  // DOWN
+             {
+              //   map[i, j] = ' ';
+                 Console.SetCursorPosition(j, i);
+                 Console.Write(' ');
+                 Console.SetCursorPosition(j , i + 1);
+                 Console.ForegroundColor = ConsoleColor.Red;
+                 enemy[init].a.y = i + 1;
+
+                 Console.Write(enemy[init].smile);
+                 //Console.Write(enemy[0]);
+               //  map[i + 1, j] = enemy[0];
+                 Console.CursorVisible = false;
+             }
+             Thread.Sleep(30);
+             
+         }
+
+         private int GetRand()
+         {
+             return randmove.Next(1, 5);
+         }
+
+         private void RRRR()  // обработка движ врагов параллельно движ игрока
+         {
+             while(true)
+             {
+                 for(int i = 0 ; i< enemycount ; i++)
+                 {
+                     if(enemy[i].ran == 1)   // RIGHT
+                     {
+                         if (OnWallEnemy(enemy[i].a.y, enemy[i].a.x + 1))
+                         {
+                             EnAlgWay(enemy[i].a.y, enemy[i].a.x++, enemy[i].ran,i);
+                         }
+
+                         else
+                         {
+                             enemy[i].ran = GetRand();
+                             continue;
+                         }
+                     }
+
+                     if (enemy[i].ran == 2)  // LEFT
+                     {
+                         if (OnWallEnemy(enemy[i].a.y, enemy[i].a.x - 1))
+                         {
+                             EnAlgWay(enemy[i].a.y, enemy[i].a.x--, enemy[i].ran, i);
+                         }
+                         else
+                         {
+                             enemy[i].ran = GetRand();
+                             continue;
+                         }
+                     }
+                     if (enemy[i].ran == 3)   // UP
+                     {
+                         if (OnWallEnemy(enemy[i].a.y - 1, enemy[i].a.x))
+                         {
+                             EnAlgWay(enemy[i].a.y--, enemy[i].a.x, enemy[i].ran, i);
+                         }
+                         else
+                         {
+                             enemy[i].ran = GetRand();
+                             continue;
+                         }
+                     }
+                     if (enemy[i].ran == 4)  // DOWN
+                     {
+                         if (OnWallEnemy(enemy[i].a.y + 1, enemy[i].a.x))
+                         {
+                             EnAlgWay(enemy[i].a.y++, enemy[i].a.x, enemy[i].ran, i);
+                         }
+                         else
+                         {
+                             enemy[i].ran = GetRand();
+                             continue;
+                         }
+                     }
+                 }
+                 //return;
+             }
+         }
+
+         private bool OnEnemy()
+         {
+            
+             int count = 0;
+             for(int i = 0; i < row; i++)
+             {
+                 for(int j = 0; j <col; j++)
+                 {
+                     while (count < enemycount)
+                     {
+                         if (map[i, j] == player && enemy[count].a.x == j && enemy[count].a.y == i)
+                         {
+                             Console.Clear();
+                             Console.WriteLine("\t\t\t********   Game Over   ********");
+                             return true;
+                         }
+                         count++;
+                     }
+                     count = 0;
+                 }
+             }
+             return false;
+         }
+
+         public void Move()  
+        {
+             Console.SetCursorPosition(0, 0);
+            Print();
+            int i = 1;
+            int j = 1;
+            MyThread.Start();  // запуск потока обработки движ врагов
+
+                while (true)
+                {
+                    if (OnEnemy()) // если попал на врага
+                    {
+                        MyThread.Abort();
+                        Console.Read();
+                        break;
+                    }
+                    if (Console.KeyAvailable)     // если нажата клав
+                    {
+                        Console.SetCursorPosition(j, i);
+                        key = Console.ReadKey();
+                        OnMoney();
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.DownArrow:
+                                if (OnWall(i + 1, j))
+                                {
+                                    map[i, j] = ' ';
+                                    PrintSpace(j, i);    // рисую пробел без перерисовки всего массива
+                                    map[++i, j] = player;
+                                    PrintPlayer(j, i);    // рисую игрока
+
+                                }
+                                else
+                                    PrintPlayer(j, i);
+                                break;
+                            case ConsoleKey.RightArrow:
+                                if (OnWall(i, j + 1))
+                                {
+                                    map[i, j] = ' ';
+                                    PrintSpace(j, i);
+                                    map[i, ++j] = player;
+                                    PrintPlayer(j, i);
+                                }
+                                else
+                                    PrintPlayer(j, i);
+                                break;
+                            case ConsoleKey.LeftArrow:
+                                if (OnWall(i, j - 1))
+                                {
+                                    map[i, j] = ' ';
+                                    PrintSpace(j, i);
+                                    map[i, --j] = player;
+                                    PrintPlayer(j, i);
+                                }
+                                else
+                                    PrintPlayer(j, i);
+                                break;
+                            case ConsoleKey.UpArrow:
+                                if (OnWall(i - 1, j))
+                                {
+                                    map[i, j] = ' ';
+                                    PrintSpace(j, i);
+                                    map[--i, j] = player;
+                                    PrintPlayer(j, i);
+                                }
+                                else
+                                    PrintPlayer(j, i);
+                                break;
+                            default:
+                                PrintPlayer(j, i);
+                                break;
+                        }
+
+                    }
+
+                }
+            
+        }
+
+
+    }
+
+}
