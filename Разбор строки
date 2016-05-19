@@ -1,0 +1,101 @@
+/*
+ 2. Написать программу, подсчитывающую количество слов, гласных и
+ * согласных букв в строке, введёной пользователем. Дополнительно выводить 
+ * количество знаков пунктуации, цифр и др. символов.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ConsoleApplication6
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Введите предложение :");
+            string str = Console.ReadLine();
+            string glas = "аоэиуыеёюя";
+            string sogl = "бвгджзйклмнпрстфхцчшщ";
+            string znaki = ",.-!:?";
+            string digits = "0123456789";
+
+            int countgl = 0;
+            int countsog = 0;
+            int countzn = 0;
+            int countdig = 0;
+            int countelse = 0;
+            int space = 0;
+            int words =0;
+
+            str = str.ToLower();
+
+            for(int i =0;i<str.Length;i++)
+            {
+                if(glas.IndexOf(str[i]) >= 0)
+                {
+                    countgl++;
+                    continue;
+                }
+                if(sogl.IndexOf(str[i]) >= 0)
+                {
+                    countsog++;
+                    continue;
+                }
+                if(znaki.IndexOf(str[i]) >= 0)
+                {
+                    countzn++;
+                    continue;
+                }
+                if(digits.IndexOf(str[i]) >= 0)
+                {
+                    countdig++;
+                    continue;
+                }
+                if(str[i] == ' ')
+                {
+                    space++;
+                    continue;
+                }
+                else
+                {
+                    countelse++;
+                }
+            }
+
+            int a =0;
+            for (int i = 0; i < str.Length;i++)
+            {
+                if(str[i] >= 'а' && str[i] <= 'я')
+                {
+                    a++;
+                    if (i == str.Length - 1)
+                        words++;
+                    continue;
+                }
+                if(a > 0 && str[i] < 'а' || str[i] > 'я')
+                {
+                    a = 0;
+                    words++;
+                }
+
+
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Слов : {0}", words);
+            Console.WriteLine("Всего символов : {0}", str.Length);
+            Console.WriteLine("Гласных : {0}", countgl);
+            Console.WriteLine("Согласных : {0}", countsog);
+            Console.WriteLine("Знаков пунктуации : {0}", countzn);
+            Console.WriteLine("Цифр : {0}", countdig);
+            Console.WriteLine("Пробелов : {0}", space);
+            Console.WriteLine("Др.символов : {0}", countelse);
+            
+         
+        }
+    }
+}
