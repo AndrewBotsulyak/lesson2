@@ -1,0 +1,120 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ConsoleApplication102
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int row = 50;
+            int col = 50;
+            int[,] arr = new int[row, col];
+
+            int x = row / 2, y = col / 2;
+            int count = 1;
+            int count2 = 1;
+            bool up = true;
+            bool down = false;
+            bool control = true;
+            int step = 4;
+            int step2 = 3;
+            arr[x, y] = 1;  // centr
+            arr[x += step2, y += step2] = ++count;
+            arr[x += step2, y -= step2] = ++count;
+            //arr[x, y -= 2] = ++count;
+
+            for(int j = 0 ; j <5; j++ )
+            {
+                if(up)
+                    arr[x, y -= step] = ++count;
+                for(int i = 0; i < count2 && x > 0 && x <= row ;i++)
+                {
+                    if (up)
+                    {
+                        if (control)
+                        {
+                            arr[x -= step2, y -= step2] = ++count;
+                            if (i + 1 == count2)
+                            {
+                                arr[x -= step2, y] = ++count;
+                                control = false;
+                                i = -1;
+                                continue;
+                            }
+                        }
+                        if (control == false)
+                        {
+                            arr[x -= step2, y += step2] = ++count;
+                            
+                            if(i+1 == count2)
+                            {
+                                up = false;
+                                down = true;
+                                count2++;
+                                break;
+                            }
+                          //  arr[x -= 2, y += 2] = ++count;
+                        }
+                    }
+                    if(down)
+                    {
+                        if (!control)
+                        {
+                            arr[x += step2, y += step2] = ++count; 
+                            if(i+1 == count2)
+                            {
+                              //  arr[x += step2, y] = ++count;
+                                control = true;
+                                i = -1;
+                                continue;
+                            }
+                        }
+                        if(control)
+                        {
+                            arr[x += step2, y -= step2] = ++count;
+                            if(i+1 == count2)
+                            {
+                                down = false;
+                                up = true;
+                                break;
+                            }
+                           // arr[x += step2, y -= step2] = ++count;
+                        }
+                       
+                    }
+
+                }
+                if(down)
+                    arr[x, y+= step] = ++count;
+                step++;
+            }
+
+            
+            for(int i =0; i <row;i++)
+            {
+                for(int j =0;j<col;j++)
+                {
+                   
+                    if (arr[i, j] == 0)
+                    {
+                        char a = ' ';
+                        Console.Write(a);
+                    }
+                    else
+                    {   
+                        if(arr[i,j].ToString().Length == 1)
+                            Console.Write(arr[i, j] + " ");
+                        else
+                            Console.Write(arr[i, j]);
+                    }
+                }
+                Console.WriteLine();
+            }
+
+        }
+    }
+}
